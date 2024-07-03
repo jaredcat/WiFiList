@@ -1,0 +1,49 @@
+name: Build (release)
+description: Builds signed release android apk
+inputs:
+  KEYSTORE_BASE_64:
+    description: 'secrets.KEYSTORE_BASE_64'
+    required: true
+  RELEASE_KEYSTORE_ALIAS:
+    description: 'secrets.RELEASE_KEYSTORE_ALIAS'
+    required: true
+  RELEASE_KEYSTORE_PASSWORD:
+    description: 'secrets.RELEASE_KEYSTORE_PASSWORD'
+    required: true
+  RELEASE_KEY_PASSWORD:
+    description: 'secrets.RELEASE_KEY_PASSWORD'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set BUILD_DIR
+      shell: bash
+      run: echo BUILD_DIR="app/build/outputs/apk/release" >> "$GITHUB_ENV"
+
+    - uses: actions/checkout@v4
+    - name: Build release apk
+      shell: bash
+      run: |
+        ./gradlew assembleRelease --no-daemon || exit $?
+        mv ${{ env.BUILD_DIR }}/*.apk "${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.apk"
+
+    # - name: Build Release bundle
+    #   run: ./gradlew bundleRelease --no-daemon || exit $?
+    #     mv ${{ env.BUILD_DIR }}/*.abb "${{ env.BUILD_DIR }}/${{ env.APP_NAME }}.abb"
+
+    - uses: r0adkll/sign-android-release@v1
+      name: Sign app APK
+      id: sign_app
+      with:
+        releaseDirectory: ${{ env.BUILD_DIR }}
+        signingKeyBase64: ${{ inputs.KEYSTORE_BASE_64 }}
+        alias: ${{ inputs.RELEASE_KEYSTORE_ALIAS }}
+        keyStorePassword: ${{ inputs.RELEASE_KEYSTORE_PASSWORD }}
+        keyPassword: ${{ inputs.RELEASE_KEY_PASSWORD }}
+      env:
+        BUILD_TOOLS_VERSION: "34.0.0"
+
+    - name: Set APK_FILE location
+      shell: bash
+      run:  echo "APK_FILE=${{steps.sign_app.outputs.signedReleaseFile}}" >> "$GITHUB_ENV"
