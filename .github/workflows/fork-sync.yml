@@ -9,22 +9,34 @@ jobs:
   sync_fork:
     runs-on: ubuntu-latest
     steps:
-      - uses: tgymnich/fork-sync@v2.0.9
+      - uses: tgymnich/fork-sync@v2
         with:
           owner: zacharee
           retries: 1
           retry_after: 10
           ignore_fail: true
 
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Determine Last Tag
+        id: last_tag
+        uses: 'WyriHaximus/github-action-get-previous-tag@v1'
+        with:
+          fallback: 1.0.0
 
-      - name: Get version
-        id: getversion
+      - uses: actions/checkout@v4
+      - name: Get Current Version
+        id: current_version
         shell: bash
         run: |
           APP_VERSION="$(./gradlew :app:properties | grep archivesBaseName | cut -d "_" -f 2)"
           echo "version=$APP_VERSION" >> $GITHUB_OUTPUT
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.getversion.outputs.version }}
-          prerelease: false
+          echo "$APP_VERSION  and  ${{steps.last_tag.outputs.tag}}"
+
+      - name: Compare Versions and Trigger Release
+        if: ${{ steps.current_version.outputs.version != steps.last_tag.outputs.tag }}
+        run: |
+          echo "Version has changed. Creating new release..."
+          git tag -a v${{ steps.current_version.outputs.version }} -m "Version ${{ steps.current_version.outputs.version }}"
+          git push origin v${{ steps.current_version.outputs.version }}
