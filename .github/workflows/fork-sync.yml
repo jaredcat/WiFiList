@@ -9,34 +9,26 @@ jobs:
   sync_fork:
     runs-on: ubuntu-latest
     steps:
-      - uses: tgymnich/fork-sync@v2
-        with:
-          owner: zacharee
-          retries: 1
-          retry_after: 10
-          ignore_fail: true
+      - name: Checkout target repo
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
-          fetch-depth: 0
-      - name: Determine Last Tag
-        id: last_tag
-        uses: 'WyriHaximus/github-action-get-previous-tag@v1'
-        with:
-          fallback: 1.0.0
+          target_sync_branch: master
+          # REQUIRED 'target_repo_token' exactly like this!
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: master
+          upstream_sync_repo: acharee/WiFiList
 
-      - uses: actions/checkout@v4
-      - name: Get Current Version
-        id: current_version
-        shell: bash
-        run: |
-          APP_VERSION="$(./gradlew :app:properties | grep archivesBaseName | cut -d "_" -f 2)"
-          echo "version=$APP_VERSION" >> $GITHUB_OUTPUT
-          echo "$APP_VERSION  and  ${{steps.last_tag.outputs.tag}}"
+      - name: New commits found
+        if: steps.sync.outputs.has_new_commits == 'true'
+        run: echo "New commits were found to sync."
 
-      - name: Compare Versions and Trigger Release
-        if: ${{ steps.current_version.outputs.version != steps.last_tag.outputs.tag }}
-        run: |
-          echo "Version has changed. Creating new release..."
-          git tag -a v${{ steps.current_version.outputs.version }} -m "Version ${{ steps.current_version.outputs.version }}"
-          git push origin v${{ steps.current_version.outputs.version }}
+      - name: No new commits
+        if: steps.sync.outputs.has_new_commits == 'false'
+        run: echo "There were no new commits."
+
+      - name: Show value of 'has_new_commits'
+        run: echo ${{ steps.sync.outputs.has_new_commits }}
