@@ -1,6 +1,5 @@
 name: Sync Fork
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
@@ -20,7 +19,7 @@ jobs:
           # REQUIRED 'target_repo_token' exactly like this!
           target_repo_token: ${{ secrets.GITHUB_TOKEN }}
           upstream_sync_branch: master
-          upstream_sync_repo: acharee/WiFiList
+          upstream_sync_repo: zacharee/WiFiList
 
       - name: New commits found
         if: steps.sync.outputs.has_new_commits == 'true'

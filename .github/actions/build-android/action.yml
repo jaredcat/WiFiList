@@ -35,18 +35,19 @@ runs:
       id: current_version
       shell: bash
       run: |
-        APP_VERSION="$(./gradlew :app:properties | grep archivesBaseName | cut -d "_" -f 2)"
-        echo "version=$APP_VERSION" >> $GITHUB_OUTPUT
-        echo "Current tag: ${{steps.last_tag.outputs.tag}} >> $GITHUB_STEP_SUMMARY
-        echo "Current version: $APP_VERSION >> $GITHUB_STEP_SUMMARY
+        echo "version=$(./gradlew :app:properties | grep archivesBaseName | cut -d "_" -f 2)" >> $GITHUB_OUTPUT
+
+    - shell: bash
+      run: |
+        echo "Last tag: ${{steps.last_tag.outputs.tag}} >> $GITHUB_STEP_SUMMARY
+        echo "Current version: ${{steps.current_version.outputs.version}} >> $GITHUB_STEP_SUMMARY
 
     - name: Compare Versions and Trigger Release
       if: ${{ steps.current_version.outputs.version != steps.last_tag.outputs.tag }}
-      shell: bash
-      run: |
-        echo "Version has changed. Creating new release..."
-        git tag -a v${{ steps.current_version.outputs.version }} -m "Version ${{ steps.current_version.outputs.version }}"
-        git push origin v${{ steps.current_version.outputs.version }}
+      uses: ncipollo/release-action@v1
+      with:
+        name: 'WiFi List ${{steps.current_version.outputs.version}}'
+        tag: '${{steps.current_version.outputs.version}}'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
