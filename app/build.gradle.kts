@@ -23,6 +23,20 @@ android {
         }
     }
 
+    buildTypes {
+        getByName("release") {
+            isDebuggable=false
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        getByName("debug") {
+            applicationIdSuffix = ".debug"
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

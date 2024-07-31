@@ -60,9 +60,8 @@ runs:
         APP_NAME="${{ github.event.repository.name }}-${GITHUB_SHA}"
         echo APP_NAME="$APP_NAME" >> "$GITHUB_ENV"
 
-    - name: Build Debug
-      if: ${{ github.event_name != 'release'  }}
-      uses: ./.github/actions/build-debug
+        APP_NAME_DEBUG="${{ github.event.repository.name }}-${GITHUB_SHA}-debug"
+        echo APP_NAME_DEBUG="$APP_NAME_DEBUG" >> "$GITHUB_ENV"
 
     - name: Build Release
       if: ${{ github.event_name == 'release'  }}
@@ -74,7 +73,17 @@ runs:
         RELEASE_KEY_PASSWORD: ${{ inputs.RELEASE_KEY_PASSWORD }}
 
     - name: Upload Release Build to Artifacts
+      if: ${{ github.event_name == 'release'  }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.APP_NAME }}
         path: ${{ env.APK_FILE }}
+
+    - name: Build Debug
+      uses: ./.github/actions/build-debug
+
+    - name: Upload Debug Build to Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME_DEBUG }}
+        path: ${{ env.APK_FILE_DEBUG }}
