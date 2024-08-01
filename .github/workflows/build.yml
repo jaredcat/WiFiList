@@ -82,6 +82,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}-debug.apk
           tag: ${{ steps.tag.outputs.name }}
+          checksums_file_name: CHECKSUMS-debug-%algo%.txt
+          checksums: sha256,sha512,md5
 
       - name: Move release apk
         run: mv **/*.apk ./${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}.apk
