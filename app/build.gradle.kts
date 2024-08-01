@@ -25,12 +25,13 @@ android {
 
     buildTypes {
         getByName("release") {
+            applicationIdSuffix = ".free"
             isDebuggable=false
             isMinifyEnabled = false
             isShrinkResources = false
         }
         getByName("debug") {
-            applicationIdSuffix = ".debug"
+            applicationIdSuffix = ".free.debug"
             isDebuggable = true
             isMinifyEnabled = false
             isShrinkResources = false

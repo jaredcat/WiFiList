@@ -74,7 +74,16 @@ jobs:
         run: echo "name=${{ github.event.release.tag_name || needs.build.outputs.app_version }}" >> $GITHUB_OUTPUT
 
       - uses: actions/download-artifact@v4
-      - name: Build debug apk
+
+      - name: Move debug apk
+        run: mv **/*-debug.apk ./${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}-debug.apk
+      - uses: termux/upload-release-action@v4.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}-debug.apk
+          tag: ${{ steps.tag.outputs.name }}
+
+      - name: Move release apk
         run: mv **/*.apk ./${{ github.event.repository.name }}-${{ steps.tag.outputs.name }}.apk
       - uses: termux/upload-release-action@v4.2.0
         with:
